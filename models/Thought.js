@@ -1,46 +1,40 @@
-// thoughtText: {
-//     String
-//     required
-//     must be between 1 & 280 characters
-// }
-// createdAt: {
-//     date:
-//     set defalut value to the current timestamp
-//     use a getter method to formate the timestampon the query
-// }
-// username (the user that created this thought) {
-//     String
-//     required
-// }
-// reactions (these are like replies) {
-//     array of nested documents created with the 'reactionSchema'
-// }
+const { Schema, model, } = require('mongoose');
+const  reactionSchema = require("./Reactions")
+const dateFormat = require('../utils/dateFormat');
 
-// Schema Settings
 
-// Create a virtual called reactionCount that retrieves the length of the thought's reactions array field on query.
+const thoughtSchema = new Schema(
+  {
+    thoughtText: {
+      type: String,
+      required: true,
+      minlength: 1,
+      maxlength: 280,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+      get: timestamp => dateFormat(timestamp),
+    },
+    username: {
+      type: String,
+      required: true,
+    },
+    reactions: [reactionSchema],
+  },
+  {
+    toJSON: {
+      virtuals: true,
+      getters: true,
+    },
+    id: false,
+  }
+);
 
-///////////////////// Reaction (SCHEMA ONLY) ////////////////
+thoughtSchema.virtual('reactionCount').get(function() {
+  return this.reactions.length;
+});
 
-// reactionId
+const Thought = model("Thought", thoughtSchema)
 
-// Use Mongoose's ObjectId data type
-// Default value is set to a new ObjectId
-// reactionBody
-
-// String
-// Required
-// 280 character maximum
-// username
-
-// String
-// Required
-// createdAt
-
-// Date
-// Set default value to the current timestamp
-// Use a getter method to format the timestamp on query
-// Schema Settings
-
-// This will not be a model, but rather will be used as the reaction field's subdocument schema in the Thought model.
-
+module.exports = Thought;
