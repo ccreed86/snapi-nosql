@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
     try {
-        const dbThoughtData = await Thought.create(req.body);
+        const dbThoughtData = await Thought.create({thoughtText: req.body.thoughtText, username: req.body.username});
         const dbUserData = await User.findOneAndUpdate(
             {
             _id: req.body.userId,
@@ -47,7 +47,7 @@ router.get("/:thoughtId", async (req, res) => {
 
 router.put("/:thoughtId", async (req, res) => {
     try {
-        const dbThoughtData = Thought.findOneAndUpdate(
+        const dbThoughtData = await Thought.findOneAndUpdate(
             { _id: req.params.thoughtId }, 
             { $set: req.body}, 
             { runValidators: true, new: true }
@@ -63,9 +63,9 @@ router.put("/:thoughtId", async (req, res) => {
 
 router.delete("/:thoughtId", async (req, res) => {
     try {
-       const dbThoughtData = Thought.findOneAndRemomve({
+       const dbThoughtData =  await Thought.findOneAndDelete({
         _id: req.params.thoughtId,
-       });
+       });console.log(dbThoughtData)
        if(!dbThoughtData) {
         return res.status(404).json({ message:"No thought with this ID!" })
     }
@@ -76,10 +76,11 @@ router.delete("/:thoughtId", async (req, res) => {
         { $pull: { thoughts: req.params.thoughtId } },
         { new: true }
     );
+    console.log(dbUserData)
     if(!dbUserData) {
         return res.status(404).json({message:"Thought created but no user with this ID!"});
     }
-        res.status(200).json({dbThoughtData, message: "Thought successfully deleted."});
+        res.status(200).json({ message: "Thought successfully deleted."});
     } catch (error) {
         res.status(500).json(error);
     }
@@ -105,7 +106,7 @@ router.post("/:thoughtId/reactions", async (req, res) => {
     }
 });
 
-router.delete("/:thoughtId/reactions", async (req, res) => {
+router.delete("/:thoughtId/reactions/:reactionId", async (req, res) => {
     try {
         const dbThoughtData = await Thought.findOneAndUpdate(
             {
